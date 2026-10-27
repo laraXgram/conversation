@@ -231,7 +231,7 @@ class ConversationManager
     public function handle(Request $request): bool
     {
         // Updates without a user (e.g. polls) can't own conversation state.
-        if (user() === null) {
+        if (blank(user())) {
             return false;
         }
 
@@ -486,11 +486,14 @@ class ConversationManager
     /**
      * Determine if the current user is in an active conversation.
      *
+     * An update with no sender (a deleted business message, a chat boost, an
+     * anonymous poll...) belongs to no one, so it is never in a conversation.
+     *
      * @return bool
      */
     public function active(): bool
     {
-        return $this->getState() !== null;
+        return sender() !== null && $this->getState() !== null;
     }
 
     /**
@@ -503,7 +506,7 @@ class ConversationManager
      */
     public function prefersConversation(Request $request): bool
     {
-        if (user() === null) {
+        if (blank(user())) {
             return false;
         }
 
@@ -554,7 +557,7 @@ class ConversationManager
      */
     public function interruptIfActive(Request $request): void
     {
-        if (user() === null || ! $this->active()) {
+        if (blank(user()) || ! $this->active()) {
             return;
         }
 
@@ -1439,7 +1442,7 @@ class ConversationManager
     {
         $callback = callback_query();
 
-        if ($callback === null || ! isset($callback->id)) {
+        if (blank($callback) || ! isset($callback->id)) {
             return;
         }
 
